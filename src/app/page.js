@@ -33,7 +33,7 @@ export default function Home() {
       setImages((prevImages) => [...prevImages, ...newImages]);
     } catch (error) {
       console.error("Görsel hatası:", error);
-      alert("Görseller yüklenirken bir hata oluştu.");
+      alert("Görsel işlenirken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -80,8 +80,24 @@ export default function Home() {
       }
 
       if (pdf) {
-        // En standart ve iPhone için tetikleyici yöntem
-        pdf.save("belge.pdf");
+        // IPHONE İÇİN ZORLA İNDİRME HİLESİ:
+        // PDF'i önce ham veri (arraybuffer) olarak alıyoruz.
+        const pdfOutput = pdf.output("arraybuffer");
+        // MIME tipini 'application/octet-stream' yaparak tarayıcıyı kandırıyoruz (ön izlemeyi engeller)
+        const blob = new Blob([pdfOutput], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "donusturulmus-dosya.pdf");
+        document.body.appendChild(link);
+        link.click();
+        
+        // Temizlik
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
       }
     } catch (error) {
       console.error("PDF hatası:", error);
@@ -113,7 +129,7 @@ export default function Home() {
         </div>
 
         <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-2xl p-10 hover:bg-blue-50 transition-all mb-6 group">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
             <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -121,7 +137,6 @@ export default function Home() {
           <span className="text-blue-700 font-semibold mb-1">
             {loading ? "Görseller İşleniyor..." : "Görselleri Seçin"}
           </span>
-          <span className="text-xs text-gray-400">JPG, PNG, WebP ve iPhone (HEIC)</span>
           <input 
             type="file" 
             className="hidden" 
@@ -164,7 +179,7 @@ export default function Home() {
                 disabled={isGenerating}
                 className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2 disabled:opacity-70 text-sm"
               >
-                {isGenerating ? "Hazırlanıyor..." : `PDF Olarak İndir`}
+                {isGenerating ? "İşleniyor..." : "PDF'i İndir"}
               </button>
             </div>
           </div>
